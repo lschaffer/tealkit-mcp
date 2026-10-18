@@ -3,10 +3,27 @@
 [![MCP Protocol](https://img.shields.io/badge/MCP-2024--11--05-blue.svg)](https://modelcontextprotocol.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Dart](https://img.shields.io/badge/Dart-3.0+-0175C2.svg?logo=dart)](https://dart.dev)
-[![Glama](https://img.shields.io/badge/Glama-Compatible-5B45FF.svg)](https://glama.ai)
+[![Glama](https://img.shields.io/badge/Glama-Listed-5B45FF.svg)](https://glama.ai/mcp/servers/lschaffer/tealkit-mcp)
 [![Smithery](https://img.shields.io/badge/Smithery-Certified-black.svg)](https://smithery.ai)
 
 A specialized **Model Context Protocol (MCP) Server** that bridges **Claude Desktop**, **Claude Code**, and **Cursor IDE** to persistent NAS/Server task scheduling, deep recursive web documentation crawlers, offline document RAG knowledge bases, and smartphone push alerts with human-in-the-loop approvals.
+
+---
+
+## Table of Contents
+- [Why TealKit MCP?](#why-tealkit-mcp)
+- [3 Core Pillars & Tools](#3-core-pillars--tools)
+- [Download & Setup](#download--setup)
+  - [Option A: Standalone Pre-compiled Binary (Recommended - Zero Dependencies)](#option-a-standalone-pre-compiled-binary-recommended---zero-dependencies)
+  - [Option B: Build from Source](#option-b-build-from-source)
+  - [Option C: Run via Docker](#option-c-run-via-docker)
+- [Client Configuration](#client-configuration)
+  - [Claude Desktop](#claude-desktop-claude_desktop_configjson)
+  - [Cursor IDE](#cursor-ide-cursormcpjson)
+- [Mobile Push Notifications Setup](#mobile-push-notifications-setup)
+- [Configuration Reference](#configuration-reference)
+- [Architecture](#architecture)
+- [License](#license)
 
 ---
 
@@ -44,23 +61,56 @@ Keep the developer informed and in control from anywhere.
 
 ---
 
-## Quickstart
+## Download & Setup
 
-### Prerequisites
-* [Dart SDK](https://dart.dev/get-dart) 3.0 or later installed on your system.
+### Option A: Standalone Pre-compiled Binary (Recommended - Zero Dependencies)
+You do **not** need Dart, Flutter, Python, or Node.js installed on your machine.
 
-### Installation
+1. Download the latest binary for your operating system from **[GitHub Releases](https://github.com/lschaffer/tealkit-mcp/releases)**:
+   - **Windows**: `tealkit-mcp.exe`
+   - **Linux**: `tealkit-mcp-linux`
+   - **macOS**: `tealkit-mcp-macos`
+2. Place the executable in a directory of your choice (e.g., `C:\tools\tealkit-mcp.exe` or `/usr/local/bin/tealkit-mcp`).
+3. Add it to your Claude Desktop or Cursor configuration (see [Client Configuration](#client-configuration) below).
 
-Clone the repository:
+---
+
+### Option B: Build from Source
+If you have the [Dart SDK](https://dart.dev/get-dart) (3.0+) installed:
+
 ```bash
+# 1. Clone the repository
 git clone https://github.com/lschaffer/tealkit-mcp.git
 cd tealkit-mcp
+
+# 2. Install dependencies
 dart pub get
+
+# 3. Compile standalone native executable
+# On Windows:
+dart compile exe bin/tealkit_mcp.dart -o tealkit-mcp.exe
+
+# On Linux / macOS:
+dart compile exe bin/tealkit_mcp.dart -o tealkit-mcp
+chmod +x tealkit-mcp
 ```
 
-Compile a standalone native binary (optional, for maximum speed):
+Alternatively, run directly from source without compiling:
 ```bash
-dart compile exe bin/tealkit_mcp.dart -o tealkit-mcp.exe
+dart run bin/tealkit_mcp.dart
+```
+
+---
+
+### Option C: Run via Docker
+To run in an isolated container:
+
+```bash
+# 1. Build Docker image
+docker build -t tealkit-mcp .
+
+# 2. Test stdio container
+docker run -i --rm tealkit-mcp
 ```
 
 ---
@@ -69,8 +119,29 @@ dart compile exe bin/tealkit_mcp.dart -o tealkit-mcp.exe
 
 ### Claude Desktop (`claude_desktop_config.json`)
 
-On Windows (`%APPDATA%\Claude\claude_desktop_config.json`) or macOS (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+Configuration file location:
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
+#### Using Pre-compiled Binary:
+```json
+{
+  "mcpServers": {
+    "tealkit": {
+      "command": "C:/tools/tealkit-mcp.exe",
+      "args": [],
+      "env": {
+        "TEALKIT_SERVER_URL": "https://tealkit.dev/tealkitserver",
+        "TEALKIT_SERVER_KEY": "YOUR_SERVER_API_KEY",
+        "TEALKIT_PUSH_URL": "https://ntfy.sh/your-private-alert-topic"
+      }
+    }
+  }
+}
+```
+
+#### Using Dart Source:
 ```json
 {
   "mcpServers": {
@@ -90,30 +161,37 @@ On Windows (`%APPDATA%\Claude\claude_desktop_config.json`) or macOS (`~/Library/
 }
 ```
 
-Or if using the compiled executable:
+#### Using Docker:
 ```json
 {
   "mcpServers": {
     "tealkit": {
-      "command": "C:/projects/ls/tealkit-mcp/tealkit-mcp.exe",
-      "args": []
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e", "TEALKIT_SERVER_URL=https://tealkit.dev/tealkitserver",
+        "-e", "TEALKIT_SERVER_KEY=YOUR_SERVER_API_KEY",
+        "tealkit-mcp"
+      ]
     }
   }
 }
 ```
 
+---
+
 ### Cursor IDE (`.cursor/mcp.json`)
 
-Add to your Cursor project or global settings:
+Add to your Cursor project `.cursor/mcp.json` or global settings:
+
 ```json
 {
   "mcpServers": {
     "tealkit": {
-      "command": "dart",
-      "args": [
-        "run",
-        "C:/projects/ls/tealkit-mcp/bin/tealkit_mcp.dart"
-      ]
+      "command": "C:/tools/tealkit-mcp.exe",
+      "args": []
     }
   }
 }
@@ -155,7 +233,7 @@ For enterprise or production deployments where notifications must wake up a full
 
 ## Configuration Reference
 
-TealKit MCP can be configured via environment variables or a local `config.yaml` file located in `~/.tealkit_mcp/config.yaml` or `./config.yaml`:
+TealKit MCP can be configured via command-line flags, environment variables, or a local `config.yaml` file located in `~/.tealkit_mcp/config.yaml` or `./config.yaml`:
 
 ```yaml
 server:
@@ -170,6 +248,15 @@ push:
   auth_token: ""
 ```
 
+### CLI Options
+```
+--config, -c       Path to custom config.yaml file
+--server-url       TealKit NAS/Server URL (e.g. https://tealkit.dev/tealkitserver)
+--server-key       TealKit Server API Key
+--rag-db           Path to RAG SQLite database directory
+--help, -h         Show help message
+```
+
 ### Environment Variables
 | Variable | Description | Default |
 | :--- | :--- | :--- |
@@ -182,7 +269,7 @@ push:
 
 ## Architecture
 
-TealKit MCP is built with **100% pure Dart**, ensuring instant startup (<100ms), zero native C++ driver dependencies, and cross-platform compatibility across Windows, Linux, and macOS.
+TealKit MCP is built with **100% pure Dart**, ensuring instant startup (<50ms), zero native C++ driver dependencies, and cross-platform compatibility across Windows, Linux, and macOS.
 
 ```
 ┌────────────────────────────────────────────────────────┐
