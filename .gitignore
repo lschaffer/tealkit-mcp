@@ -1,0 +1,15 @@
+﻿# Dart / Flutter build and cache artifacts
+.dart_tool/
+.packages
+build/
+*.exe
+
+# Local configuration and secrets
+.env
+*.local
+config.yaml
+
+# Local databases and caches
+*.db
+*.sqlite
+index/

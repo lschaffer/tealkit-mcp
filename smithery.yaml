@@ -1,0 +1,16 @@
+# Smithery configuration for TealKit MCP Bridge Server
+version: 1.0.0
+startCommand:
+  type: stdio
+  config:
+    command: dart
+    args: ["run", "bin/tealkit_mcp.dart"]
+    env:
+      TEALKIT_SERVER_URL:
+        type: string
+        description: "URL of your TealKit Server or NAS instance (default: https://tealkit.dev)"
+        default: "https://tealkit.dev"
+      TEALKIT_SERVER_KEY:
+        type: string
+        description: "API Key for TealKit Server authentication (optional)"
+        default: ""

@@ -1,0 +1,23 @@
+﻿name: tealkit_mcp
+description: TealKit MCP Server — Persistent Background Tasks on NAS/Server, Deep Recursive Web-Crawling RAG, and Mobile Push Approvals for Claude & Cursor.
+version: 1.0.0
+homepage: https://tealkit.dev
+repository: https://github.com/lschaffer/tealkit-mcp
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  args: ^2.6.0
+  dart_mcp_core: ^1.2.0
+  http: ^1.2.2
+  path: ^1.9.0
+  yaml: ^3.1.4
+  sqlite3: ^2.4.4
+  archive: ^4.0.0
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.0
