@@ -26,7 +26,7 @@ State-of-the-art coding assistants like Claude Desktop and Cursor excel at writi
 ### 🌐 Pillar 1: Persistent Background Tasks & NAS Scheduling
 Offload long-running tasks and cron schedules to your TealKit Server or NAS.
 * `tealkit_schedule_job`: Schedules recurring background cron tasks (e.g. daily backups, nightly benchmark runs, continuous health checks).
-* `tealkit_run_background`: Dispatches asynchronous long-running jobs (fire-and-forget) to your server worker pool.
+* `tealkit_run_background`: Dispatches asynchronous long-running jobs (fire-and-forget) to your server worker pool. Supports exact task IDs or human-readable names (e.g. `"tcloud disk space"`).
 * `tealkit_get_job_status`: Checks logs, exit status, and progress of any queued or running job.
 * `tealkit_list_jobs`: Lists all active, scheduled, and configured jobs on your server.
 
@@ -39,7 +39,7 @@ Turn any documentation website or directory into an offline SQLite knowledge bas
 
 ### 📱 Pillar 3: Mobile Push Alerts & Human-in-the-Loop Approvals
 Keep the developer informed and in control from anywhere.
-* `tealkit_send_mobile_alert`: Sends instant push notifications with configurable priority to the user's TealKit Android / iOS app.
+* `tealkit_send_mobile_alert`: Sends instant push notifications with configurable priority to the user's smartphone.
 * `tealkit_request_mobile_approval`: Presents an interactive confirmation card on the user's smartphone with **Approve** / **Reject** buttons and waits for human authorization before high-risk actions (e.g. database migrations, cloud deployments).
 
 ---
@@ -81,8 +81,9 @@ On Windows (`%APPDATA%\Claude\claude_desktop_config.json`) or macOS (`~/Library/
         "C:/projects/ls/tealkit-mcp/bin/tealkit_mcp.dart"
       ],
       "env": {
-        "TEALKIT_SERVER_URL": "https://tealkit.dev",
-        "TEALKIT_SERVER_KEY": "YOUR_OPTIONAL_API_KEY"
+        "TEALKIT_SERVER_URL": "https://tealkit.dev/tealkitserver",
+        "TEALKIT_SERVER_KEY": "YOUR_SERVER_API_KEY",
+        "TEALKIT_PUSH_URL": "https://ntfy.sh/your-private-alert-topic"
       }
     }
   }
@@ -120,20 +121,52 @@ Add to your Cursor project or global settings:
 
 ---
 
-## Configuration Options
+## Mobile Push Notifications Setup
+
+TealKit MCP supports three flexible methods to deliver push notifications and human-in-the-loop approvals to your phone:
+
+### Method 1: Instant Zero-Setup via ntfy.sh (Recommended)
+[ntfy.sh](https://ntfy.sh) is a free, privacy-friendly, open-source HTTP push notification service:
+1. Install the free **ntfy** app on your phone:
+   - [ntfy for Android (Google Play)](https://play.google.com/store/apps/details?id=io.heckel.ntfy) or [F-Droid](https://f-droid.org/packages/io.heckel.ntfy/)
+   - [ntfy for iOS (App Store)](https://apps.apple.com/app/ntfy/id1625396347)
+2. Open the ntfy app and tap **+** to subscribe to your own private topic name (e.g. `tealkit-dev-alert-9823`).
+3. Set the endpoint in your config:
+   ```yaml
+   push:
+     endpoint: "https://ntfy.sh/tealkit-dev-alert-9823"
+   ```
+   or via environment variable `TEALKIT_PUSH_URL=https://ntfy.sh/tealkit-dev-alert-9823`.
+4. Claude can now send alerts and approval prompts directly to your lock screen with zero infrastructure setup.
+
+### Method 2: TealKit Mobile App via Server SSE Gateway
+If you have the TealKit Flutter mobile app running:
+1. The app connects to the event stream at `https://tealkit.dev/tealkitserver/api/v1/events`.
+2. When `tealkit_send_mobile_alert` is executed, the server broadcasts an alert event to the mobile client.
+3. The mobile app displays a system notification using `flutter_local_notifications` (`task_success`, `task_error` channels).
+
+### Method 3: Firebase Cloud Messaging (FCM)
+For enterprise or production deployments where notifications must wake up a fully closed mobile app:
+1. Register your device token in the TealKit Server device registry (`/api/v1/devices`).
+2. Configure `TEALKIT_PUSH_KEY` with your server's Firebase service credentials.
+3. High-priority pushes are routed directly through Google/Apple APNs gateways.
+
+---
+
+## Configuration Reference
 
 TealKit MCP can be configured via environment variables or a local `config.yaml` file located in `~/.tealkit_mcp/config.yaml` or `./config.yaml`:
 
 ```yaml
 server:
-  url: "https://tealkit.dev"   # Or local NAS: http://192.168.1.50:8080
-  api_key: ""
+  url: "https://tealkit.dev/tealkitserver"   # Or local NAS: http://192.168.1.50:8080
+  api_key: "your_api_key"
 
 rag:
   database_path: "~/.tealkit_mcp/knowledge.db"
 
 push:
-  endpoint: ""
+  endpoint: "https://ntfy.sh/your-topic"
   auth_token: ""
 ```
 
@@ -149,7 +182,7 @@ push:
 
 ## Architecture
 
-TealKit MCP is built with **100% pure Dart**, ensuring instant startup, zero native C++ driver dependencies, and cross-platform compatibility across Windows, Linux, and macOS.
+TealKit MCP is built with **100% pure Dart**, ensuring instant startup (<100ms), zero native C++ driver dependencies, and cross-platform compatibility across Windows, Linux, and macOS.
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -163,7 +196,7 @@ TealKit MCP is built with **100% pure Dart**, ensuring instant startup, zero nat
 │   (Server Bridge) │ (Crawler & FTS5) │  (Push Gateway) │
 └─────────┬─────────┴────────┬─────────┴────────┬────────┘
           │                  │                  │
-    TealKit Server/NAS  Local SQLite DB   TealKit Mobile App
+    TealKit Server/NAS  Local SQLite DB   Smartphone App (ntfy / TealKit)
 ```
 
 ---
