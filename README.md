@@ -3,7 +3,7 @@
 [![MCP Protocol](https://img.shields.io/badge/MCP-2024--11--05-blue.svg)](https://modelcontextprotocol.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Dart](https://img.shields.io/badge/Dart-3.0+-0175C2.svg?logo=dart)](https://dart.dev)
-[![Glama](https://img.shields.io/badge/Glama-Listed-5B45FF.svg)](https://glama.ai/mcp/servers/lschaffer/tealkit-mcp)
+[![lschaffer/tealkit-mcp MCP server](https://glama.ai/mcp/servers/lschaffer/tealkit-mcp/badges/score.svg)](https://glama.ai/mcp/servers/lschaffer/tealkit-mcp)
 [![Smithery](https://img.shields.io/badge/Smithery-Certified-black.svg)](https://smithery.ai)
 
 A specialized **Model Context Protocol (MCP) Server** that bridges **Claude Desktop**, **Claude Code**, and **Cursor IDE** to persistent NAS/Server task scheduling, deep recursive web documentation crawlers, offline document RAG knowledge bases, and smartphone push alerts with human-in-the-loop approvals.
@@ -86,13 +86,12 @@ cd tealkit-mcp
 # 2. Install dependencies
 dart pub get
 
-# 3. Compile standalone native executable
-# On Windows:
-dart compile exe bin/tealkit_mcp.dart -o tealkit-mcp.exe
+# 3. Compile standalone native bundle (includes sqlite3 native assets)
+dart build cli -o build/cli
 
-# On Linux / macOS:
-dart compile exe bin/tealkit_mcp.dart -o tealkit-mcp
-chmod +x tealkit-mcp
+# Binary output:
+# Windows: build/cli/bundle/bin/tealkit_mcp.exe
+# Linux / macOS: build/cli/bundle/bin/tealkit_mcp
 ```
 
 Alternatively, run directly from source without compiling:

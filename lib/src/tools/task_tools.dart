@@ -104,7 +104,11 @@ class TaskTools {
             commandOrPrompt: command,
             profile: profile,
           );
-          final text = 'Scheduled job "$taskName" ($cron): ${res['job_id'] ?? 'registered'}. Note: ${res['note'] ?? 'active'}';
+          if (res['success'] == false) {
+            return {'content': [{'type': 'text', 'text': 'Failed to schedule job "$taskName": ${res['error']}'}], 'isError': true};
+          }
+          final jobId = res['job_id'] ?? res['id'] ?? 'registered';
+          final text = 'Scheduled job "$taskName" ($cron): $jobId. Note: ${res['note'] ?? 'active'}';
           return {'content': [{'type': 'text', 'text': text}], 'isError': false};
 
         case 'tealkit_run_background':
@@ -117,7 +121,12 @@ class TaskTools {
             arguments: args,
             timeoutMinutes: timeout,
           );
-          final text = 'Dispatched background task "$task": Job ID ${res['job_id'] ?? 'dispatched'}. Status: ${res['status'] ?? 'queued'}';
+          if (res['success'] == false) {
+            return {'content': [{'type': 'text', 'text': 'Failed to dispatch background task "$task": ${res['error']}'}], 'isError': true};
+          }
+          final jobId = res['task_id'] ?? res['job_id'] ?? res['run_id'] ?? 'dispatched';
+          final runSuffix = res['run_id'] != null ? ' (run_id: ${res['run_id']})' : '';
+          final text = 'Dispatched background task "$task": Job ID $jobId$runSuffix. Status: ${res['status'] ?? 'queued'}';
           return {'content': [{'type': 'text', 'text': text}], 'isError': false};
 
         case 'tealkit_get_job_status':
@@ -134,7 +143,15 @@ class TaskTools {
           }
           final sb = StringBuffer('Registered Tasks / Jobs (${tasks.length}):\n');
           for (final t in tasks) {
-            sb.writeln('• ${t['name']} [${t['cron'] ?? t['id']}] - Status: ${t['status']}');
+            final execPlan = t['execution_plan'] as Map?;
+            final exec = t['execution'] as Map?;
+            final cron = t['cron'] ?? execPlan?['cron_expression'];
+            final scheduleLabel = (cron is String && cron.isNotEmpty) ? cron : t['id'];
+            final status = t['status'] ??
+                (exec?['is_running'] == true
+                    ? 'running'
+                    : (t['enabled'] == false ? 'disabled' : 'active'));
+            sb.writeln('• ${t['name']} [$scheduleLabel] (id: ${t['id']}) - Status: $status');
           }
           return {'content': [{'type': 'text', 'text': sb.toString()}], 'isError': false};
 

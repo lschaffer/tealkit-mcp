@@ -6,7 +6,7 @@ COPY pubspec.* ./
 RUN dart pub get
 
 COPY . .
-RUN dart compile exe bin/tealkit_mcp.dart -o bin/tealkit_mcp
+RUN mkdir -p /app/build && dart build cli --output /app/build
 
 # Stage 2: Minimal runtime image
 FROM debian:bookworm-slim
@@ -15,7 +15,9 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY --from=build /app/bin/tealkit_mcp /app/tealkit_mcp
+COPY --from=build /app/build/bundle /app/bundle
+
+ENV LD_LIBRARY_PATH=/app/bundle/lib
 
 # Entrypoint for MCP stdio protocol
-ENTRYPOINT ["/app/tealkit_mcp"]
+ENTRYPOINT ["/app/bundle/bin/tealkit_mcp"]

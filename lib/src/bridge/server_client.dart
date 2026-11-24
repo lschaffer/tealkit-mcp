@@ -172,17 +172,25 @@ class TealKitServerBridge {
   }) async {
     try {
       final res = await _client.post(
-        _uri('/api/v1/schedule'),
+        _uri('/api/v1/tasks'),
         headers: _headers,
         body: jsonEncode({
-          'cron': cronExpression,
+          'title': taskName,
           'name': taskName,
-          'command': commandOrPrompt,
+          'cron_expression': cronExpression,
+          'llm_prompt': commandOrPrompt,
+          'enabled': true,
           'profile': profile,
         }),
       );
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        return jsonDecode(res.body) as Map<String, dynamic>;
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        return {
+          ...data,
+          'success': true,
+          'job_id': data['id'] ?? data['job_id'],
+          'note': 'Registered on TealKit server (${config.serverUrl})',
+        };
       }
       return {'success': false, 'error': 'HTTP ${res.statusCode}: ${res.body}'};
     } catch (e) {
